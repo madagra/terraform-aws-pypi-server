@@ -4,13 +4,6 @@ resource "aws_security_group" "ec2_instance_sg" {
 
   ingress {
     protocol    = "tcp"
-    from_port   = 22
-    to_port     = 22
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  ingress {
-    protocol    = "tcp"
     from_port   = var.pypi_port
     to_port     = var.pypi_port
     cidr_blocks = ["0.0.0.0/0"]
@@ -95,13 +88,12 @@ EOT
 }
 
 resource "aws_instance" "pypi" {
-  ami                  = local.ami_id
-  instance_type        = local.instance_type
-  user_data = data.template_cloudinit_config.config.rendered
+  ami           = local.ami_id
+  instance_type = var.instance_type
+  user_data     = data.template_cloudinit_config.config.rendered
 
-  subnet_id              = var.vpc_subnet
+  subnet_id              = var.vpc_subnets[0]
   vpc_security_group_ids = [aws_security_group.ec2_instance_sg.id]
-  key_name               = var.key_pair
 
   tags = {
     Name      = "pypi-ec2-instance"
