@@ -1,0 +1,35 @@
+write_files:
+  - path: /opt/run_pypi_server.sh
+    content: |
+        #!/usr/bin/env bash
+
+        sudo yum update -y
+        sudo yum install -y python3
+        sudo python3 -m pip install passlib
+        sudo python3 -m pip install pypiserver
+
+        sudo python3 -m pypiserver -v -p 8080 -P /opt/pypi_server/htpasswd -a download,update,list /opt/pypi_server/packages
+  - path: /etc/systemd/system/pypi_server.service
+    content: |
+        [Unit]
+        Description=Private Pypi server
+        After=network.target
+
+        [Service]
+        Type=simple
+        ExecStart=/opt/run_pypi_server.sh
+        KillMode=process
+        Restart=on-failure
+        RestartSec=42s
+
+        [Install]
+        WantedBy=default.target
+runcmd:
+  - yum update -y
+  - yum install -y httpd-tools
+  - htpasswd -b -c htpasswd '${pypi_username}' '${pypi_password}'
+  - chmod u+x /opt/run_pypi_server.sh
+  - mkdir -p /opt/pypi_server/packages
+  - systemctl enable pypi_server.service
+  - systemctl start pypi_server.service
+  - sleep 1

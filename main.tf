@@ -22,81 +22,119 @@ resource "aws_security_group" "ec2_instance_sg" {
   }
 }
 
-data "template_cloudinit_config" "config" {
-  gzip          = false
-  base64_encode = true
+data "template_file" "cloud_init" {
 
-  part {
-    content_type = "text/x-shellscript"
-    content      = <<EOT
-#!/bin/bash
+  template = file("${path.module}/cloud_init.yaml")
 
-sudo mkdir -p /opt/pypi_server
-cd /opt/pypi_server
-
-# create username and password for authentication
-sudo yum update -y
-sudo yum install -y httpd-tools
-sudo htpasswd -b -c htpasswd ${var.pypi_username} ${var.pypi_password} 
-
-# launch script for the PyPi server
-cat << EOF > ./run_pypi_server.sh
-#!/bin/bash
-
-sudo yum update -y
-sudo yum install -y python3
-sudo python3 -m pip install passlib
-sudo python3 -m pip install pypiserver
-
-sudo python3 -m pypiserver -v -p 8080 -P /opt/pypi_server/htpasswd -a download,update,list /opt/pypi_server/packages
-EOF
-
-sudo chmod u+x run_pypi_server.sh
-sudo mkdir packages
-
-# add the PyPi server to the running services
-cat << EOF > ./pypi_server.service
-[Unit]
-Description=Private Pypi server
-After=network.target
-
-[Service]
-Type=simple
-ExecStart=/opt/pypi_server/run_pypi_server.sh
-KillMode=process
-Restart=on-failure
-RestartSec=42s
-
-[Install]
-WantedBy=default.target
-EOF
-
-sudo mv ./pypi_server.service /etc/systemd/system
-sudo systemctl enable pypi_server.service
-sudo systemctl start pypi_server.service
-
-EOT
-  }
-
-  dynamic "part" {
-    for_each = local.user_data
-    content {
-      content_type = "text/x-shellscript"
-      content      = part.value
-    }
+  vars = {
+    pypi_username = var.pypi_username
+    pypi_password = var.pypi_password
   }
 }
+
+# data "template_cloudinit_config" "config" {
+#   gzip          = false
+#   base64_encode = true
+
+#   part {
+#     content_type = "text/x-shellscript"
+#     content      = <<EOT
+# #!/bin/bash
+
+# sudo mkdir -p /opt/pypi_server
+# cd /opt/pypi_server
+
+# # create username and password for authentication
+# sudo yum update -y
+# sudo yum install -y httpd-tools
+# sudo htpasswd -b -c htpasswd ${var.pypi_username} ${var.pypi_password} 
+
+# # launch script for the PyPi server
+# cat << EOF > ./run_pypi_server.sh
+# #!/bin/bash
+
+# sudo yum update -y
+# sudo yum install -y python3
+# sudo python3 -m pip install passlib
+# sudo python3 -m pip install pypiserver
+
+# sudo python3 -m pypiserver -v -p 8080 -P /opt/pypi_server/htpasswd -a download,update,list /opt/pypi_server/packages
+# EOF
+
+# sudo chmod u+x run_pypi_server.sh
+# sudo mkdir packages
+
+# # add the PyPi server to the running services
+# cat << EOF > ./pypi_server.service
+# [Unit]
+# Description=Private Pypi server
+# After=network.target
+
+# [Service]
+# Type=simple
+# ExecStart=/opt/pypi_server/run_pypi_server.sh
+# KillMode=process
+# Restart=on-failure
+# RestartSec=42s
+
+# [Install]
+# WantedBy=default.target
+# EOF
+
+# sudo mv ./pypi_server.service /etc/systemd/system
+# sudo systemctl enable pypi_server.service
+# sudo systemctl start pypi_server.service
+
+# EOT
+#   }
+
+#   dynamic "part" {
+#     for_each = local.user_data
+#     content {
+#       content_type = "text/x-shellscript"
+#       content      = part.value
+#     }
+#   }
+# }
 
 resource "aws_instance" "pypi" {
   ami           = local.ami_id
   instance_type = var.instance_type
-  user_data     = data.template_cloudinit_config.config.rendered
+  user_data     = data.template_file.cloud_init.rendered
 
-  subnet_id              = var.vpc_subnets[0]
+  subnet_id              = var.vpc_subnet
   vpc_security_group_ids = [aws_security_group.ec2_instance_sg.id]
 
   tags = {
     Name      = "pypi-ec2-instance"
     Terraform = "true"
+  }
+}
+
+resource "aws_lb_target_group" "pypi_tg" {
+  count    = local.count_alb
+  name     = "pypi-tg"
+  port     = var.pypi_port
+  protocol = "HTTP"
+  vpc_id   = var.vpc_id
+}
+
+resource "aws_lb_target_group_attachment" "pypi_tg_attachment" {
+  count            = local.count_alb
+  target_group_arn = aws_lb_target_group.pypi_tg[0].arn
+  target_id        = aws_instance.pypi.id
+  port             = var.pypi_port
+}
+
+resource "aws_lb_listener" "pypi_listener" {
+  count             = local.count_alb
+  load_balancer_arn = var.alb_arn
+  port              = var.pypi_port
+  protocol          = var.certificate_arn == null ? "HTTP" : "HTTPS"
+  certificate_arn   = var.certificate_arn
+
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.pypi_tg[0].arn
   }
 }

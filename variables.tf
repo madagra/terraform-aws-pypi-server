@@ -3,21 +3,15 @@ variable "vpc_id" {
   type        = string
 }
 
-variable "vpc_subnets" {
+variable "vpc_subnet" {
   description = "The VPC subnet where the PyPi server instance should run"
-  type        = list(string)
+  type        = string
 }
 
 variable "alb_arn" {
   description = "The ARN of the ALB to which PyPi server requests are forwarded"
   type        = string
-  default     = null
-}
-
-variable "domain_name" {
-  description = "The domain name to use for accessing the PyPi server"
-  type        = string
-  default     = null
+  default     = ""
 }
 
 variable "certificate_arn" {
@@ -46,18 +40,12 @@ variable "pypi_port" {
   default = 8080
 }
 
-variable "user_data" {
-  description = "A shell script will be executed at once at EC2 instance start."
-  type        = string
-  default     = ""
-}
-
 data "aws_ssm_parameter" "ec2_ami" {
   name = "/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2"
 }
 
 locals {
-  user_data = var.user_data == "" ? [] : [var.user_data]
   ami_id    = data.aws_ssm_parameter.ec2_ami.value
+  count_alb = var.alb_arn == null ? 1 : 0
 }
 
