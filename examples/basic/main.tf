@@ -38,7 +38,7 @@ provider "aws" {
 
 module "vpc" {
   source  = "terraform-aws-modules/vpc/aws"
-  version = "~> 2.48.0"
+  version = "~> 2.66.0"
 
   name = "sample_vpc"
   cidr = "10.0.0.0/16"
@@ -63,13 +63,19 @@ module "vpc" {
 
 module "pypi_server" {
 
-  count = local.build_pypi
-
   source = "../../"
 
   vpc_id          = module.vpc.vpc_id
   vpc_subnet      = module.vpc.public_subnets[0]
-  pypi_username   = var.pypi_username
-  pypi_password   = var.pypi_password
+  pypi_username   = "admin"
+  pypi_password   = "password"
 }
 
+
+output "upload_package_pypi" {
+  value = "To upload a package to the PyPi server, modify ~/.pypirc file and use: python setup.py sdist upload -r cloud"
+}
+
+output "install_package_pypi" {
+  value = "To install a package available in the PyPi server use: pip install --index-url http:/admin:password@${module.pypi_server.pypi_public_dns}:8080/simple/ PACKAGE [PACKAGE2...]"
+}

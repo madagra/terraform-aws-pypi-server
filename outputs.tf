@@ -1,7 +1,7 @@
-output "upload_package_pypi" {
-  value = "To upload a package to the PyPi server use: "
+output "pypi_public_dns" {
+  value = aws_instance.pypi.public_dns
 }
 
-output "install_package_pypi" {
-  value = "To install a package available in the PyPi server use: "
+output "pypi_public_ip" {
+  value = aws_instance.pypi.public_ip
 }

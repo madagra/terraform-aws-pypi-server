@@ -1,3 +1,7 @@
+#cloud-config
+repo_update: true
+repo_upgrade: all
+
 write_files:
   - path: /opt/run_pypi_server.sh
     content: |
@@ -27,9 +31,9 @@ write_files:
 runcmd:
   - yum update -y
   - yum install -y httpd-tools
-  - htpasswd -b -c htpasswd '${pypi_username}' '${pypi_password}'
   - chmod u+x /opt/run_pypi_server.sh
   - mkdir -p /opt/pypi_server/packages
+  - htpasswd -b -c /opt/pypi_server/htpasswd '${pypi_username}' '${pypi_password}'
   - systemctl enable pypi_server.service
   - systemctl start pypi_server.service
   - sleep 1
