@@ -8,15 +8,22 @@ variable "vpc_subnet" {
   type        = string
 }
 
+variable "has_alb" {
+  description = "A flag to determine whether the PyPi server should be put behind an application load balancer"
+  type        = bool
+  default     = false
+}
+
 variable "alb_arn" {
-  description = "The ARN of the ALB to which PyPi server requests are forwarded"
+  description = "The ARN of the application load balancer forwarding HTTP requests to the PyPi server"
   type        = string
-  default     = ""
+  default     = null
 }
 
 variable "certificate_arn" {
-  type    = string
-  default = null
+  description = "The ARN of the certificate to enable HTTPS communication with the load balancer"
+  type        = string
+  default     = ""
 }
 
 variable "pypi_username" {
@@ -35,6 +42,12 @@ variable "instance_type" {
   default     = "t3a.nano"
 }
 
+variable "ebs_size" {
+  description = "The size in GB of the EBS disk to use for PyPi package storage"
+  type        = number
+  default     = 2
+}
+
 variable "pypi_port" {
   type    = number
   default = 8080
@@ -46,6 +59,5 @@ data "aws_ssm_parameter" "ec2_ami" {
 
 locals {
   ami_id    = data.aws_ssm_parameter.ec2_ami.value
-  count_alb = var.alb_arn == null ? 1 : 0
+  count_alb = var.has_alb == true ? 1 : 0
 }
-

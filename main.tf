@@ -1,3 +1,22 @@
+locals {
+  mount_point = "/dev/sdh"
+}
+
+data "aws_availability_zones" "available" {
+  state = "available"
+}
+
+data "template_file" "cloud-init" {
+
+  template = file("${path.module}/cloud-init.yaml")
+
+  vars = {
+    pypi_username = var.pypi_username
+    pypi_password = var.pypi_password
+    mount_point   = local.mount_point
+  }
+}
+
 resource "aws_security_group" "ec2_instance_sg" {
 
   vpc_id = var.vpc_id
@@ -29,16 +48,6 @@ resource "aws_security_group" "ec2_instance_sg" {
   }
 }
 
-data "template_file" "cloud-init" {
-
-  template = file("${path.module}/cloud-init.yaml")
-
-  vars = {
-    pypi_username = var.pypi_username
-    pypi_password = var.pypi_password
-  }
-}
-
 resource "aws_instance" "pypi" {
   ami           = local.ami_id
   instance_type = var.instance_type
@@ -50,6 +59,23 @@ resource "aws_instance" "pypi" {
 
   tags = {
     Name      = "pypi-ec2-instance"
+    Terraform = "true"
+  }
+}
+
+resource "aws_volume_attachment" "pypi_ebs_att" {
+  device_name = local.mount_point
+  volume_id   = aws_ebs_volume.pypi_ebs.id
+  instance_id = aws_instance.pypi.id
+}
+
+resource "aws_ebs_volume" "pypi_ebs" {
+  availability_zone = data.aws_availability_zones.available.names[0]
+  type              = "gp2"
+  size              = var.ebs_size
+
+  tags = {
+    Name      = "pypi-ebs-storage"
     Terraform = "true"
   }
 }
@@ -72,9 +98,9 @@ resource "aws_lb_target_group_attachment" "pypi_tg_attachment" {
 resource "aws_lb_listener" "pypi_listener" {
   count             = local.count_alb
   load_balancer_arn = var.alb_arn
-  port              = var.pypi_port
-  protocol          = var.certificate_arn == null ? "HTTP" : "HTTPS"
-  certificate_arn   = var.certificate_arn
+  port              = 443
+  protocol          = var.certificate_arn == "" ? "HTTP" : "HTTPS"
+  certificate_arn   = var.certificate_arn == "" ? null : var.certificate_arn
 
   default_action {
     type             = "forward"

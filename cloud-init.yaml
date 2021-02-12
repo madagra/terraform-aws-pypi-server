@@ -31,8 +31,11 @@ write_files:
 runcmd:
   - yum update -y
   - yum install -y httpd-tools
+  - mkfs -t xfs '${mount_point}' >& /dev/null
+  - mkdir /opt/pypi_server/
   - chmod u+x /opt/run_pypi_server.sh
-  - mkdir -p /opt/pypi_server/packages
+  - mount '${mount_point}' /opt/pypi_server/
+  - mkdir /opt/pypi_server/packages
   - htpasswd -b -c /opt/pypi_server/htpasswd '${pypi_username}' '${pypi_password}'
   - systemctl enable pypi_server.service
   - systemctl start pypi_server.service

@@ -12,6 +12,17 @@ variable "region" {
   default     = "us-east-1"
 }
 
+variable "pypi_port" {
+  description = "The port needed by the PyPi server"
+  type        = number
+  default     = 8080
+}
+
+variable "domain_name" {
+  description = "The domain name to reach the PyPi server"
+  type        = string
+}
+
 data "aws_availability_zones" "available" {
   state = "available"
 }
@@ -43,7 +54,7 @@ module "vpc" {
   enable_dns_support   = true
 
   tags = {
-    Name      = "basic-example-vpc"
+    Name      = "complete-example-vpc"
     Terraform = "true"
   }
 }
@@ -54,10 +65,13 @@ module "pypi_server" {
 
   source = "../../"
 
-  vpc_id        = module.vpc.vpc_id
-  vpc_subnet    = module.vpc.public_subnets[0]
-  pypi_username = "admin"
-  pypi_password = "password"
+  vpc_id          = module.vpc.vpc_id
+  vpc_subnet      = module.vpc.public_subnets[0]
+  pypi_username   = "admin"
+  pypi_password   = "password"
+  has_alb         = true
+  alb_arn         = module.alb.this_lb_arn
+  certificate_arn = module.acm.this_acm_certificate_arn
 }
 
 
@@ -66,5 +80,5 @@ output "upload_package_pypi" {
 }
 
 output "install_package_pypi" {
-  value = "To install a package available in the PyPi server use: pip install --index-url http:/admin:password@${module.pypi_server.pypi_public_dns}:8080/simple/ PACKAGE [PACKAGE2...]"
+  value = "To install a package available in the PyPi server use: pip install --index-url https:/admin:password@${var.domain_name}:8080/simple/ PACKAGE [PACKAGE2...]"
 }
