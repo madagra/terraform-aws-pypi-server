@@ -8,6 +8,18 @@ variable "vpc_subnet" {
   type        = string
 }
 
+variable "pypi_username" {
+  description = "The username for uploading and download packages from the PyPi server. Keep default only for testing."
+  type        = string
+  default     = "admin"
+}
+
+variable "pypi_password" {
+  description = "The password corresponding to the pypi_username variable. Keep default only for testing."
+  type        = string
+  default     = "password"
+}
+
 variable "has_alb" {
   description = "A flag to determine whether the PyPi server should be put behind an application load balancer"
   type        = bool
@@ -17,23 +29,13 @@ variable "has_alb" {
 variable "alb_arn" {
   description = "The ARN of the application load balancer forwarding HTTP requests to the PyPi server"
   type        = string
-  default     = null
+  default     = ""
 }
 
 variable "certificate_arn" {
   description = "The ARN of the certificate to enable HTTPS communication with the load balancer"
   type        = string
   default     = ""
-}
-
-variable "pypi_username" {
-  description = "The username for uploading and download packages from the PyPi server"
-  type        = string
-}
-
-variable "pypi_password" {
-  description = "The password corresponding to the pypi_username variable"
-  type        = string
 }
 
 variable "instance_type" {
@@ -49,8 +51,9 @@ variable "ebs_size" {
 }
 
 variable "pypi_port" {
-  type    = number
-  default = 8080
+  type        = number
+  description = "The port to which the PyPi server is listening"
+  default     = 8080
 }
 
 data "aws_ssm_parameter" "ec2_ami" {
