@@ -66,7 +66,7 @@ module "pypi_server" {
   source = "../../"
 
   vpc_id          = module.vpc.vpc_id
-  vpc_subnet      = module.vpc.public_subnets[0]
+  vpc_subnet      = module.vpc.private_subnets[0]
   pypi_username   = "admin"
   pypi_password   = "password"
   has_alb         = true

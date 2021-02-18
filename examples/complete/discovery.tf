@@ -35,8 +35,9 @@ resource "aws_route53_record" "dns_record" {
 }
 
 # NOTE
-# the port used by the PyPi server must be opened in the security
-# group associated with the load balancer
+# the port used by the PyPi server and HTTPS port must be opened 
+# in the security group associated with the load balancer since Terraform
+# does not currently support to add single rules to security groups after creation
 resource "aws_security_group" "alb_sg" {
 
   vpc_id = module.vpc.vpc_id
@@ -80,27 +81,6 @@ module "alb" {
   vpc_id          = module.vpc.vpc_id
   subnets         = module.vpc.public_subnets
   security_groups = [aws_security_group.alb_sg.id]
-
-  target_groups = [
-    {
-      backend_protocol = "HTTP"
-      backend_port     = var.pypi_port
-      target_type      = "ip"
-      "health_check" = {
-        enabled = true,
-        path    = "/"
-      }
-    }
-  ]
-
-  https_listeners = [
-    {
-      port               = 443
-      protocol           = "HTTPS"
-      target_group_index = 0
-      certificate_arn    = module.acm.this_acm_certificate_arn
-    }
-  ]
 
   tags = {
     Name      = "complete-example-alb"

@@ -1,8 +1,8 @@
 # Terraform module to deploy a private PyPi server on AWS EC2
 
 This simple module deploys a private, password-protected PyPi repository running on an AWS EC2 instance within a VPC.
-Optionally, one can also provide the ARN of a load balancer to put in front of the PyPi server to
-enable HTTPS requests to it.
+Optionally, one can also provide the ARN of a load balancer to put in front of the PyPi server to allow querying
+it with HTTPS requests.
 
 
 ## Usage
@@ -35,7 +35,7 @@ module "pypi_server" {
 }
 ```
 
-The example above is minimal, but complete. The only external resource necessary to run the server is the VPC where the
+The example above is minimal but complete. The only external resource necessary to run the server is the VPC where the
 EC2 instance is provisioned. More detailed examples are contained in the folder `examples/`.
 
 

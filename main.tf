@@ -52,7 +52,7 @@ resource "aws_instance" "pypi" {
   ami           = local.ami_id
   instance_type = var.instance_type
   user_data     = data.template_file.cloud-init.rendered
-  key_name      = "dev-kp-us-west-1"
+  # key_name      = "test-keypair"
 
   subnet_id              = var.vpc_subnet
   vpc_security_group_ids = [aws_security_group.ec2_instance_sg.id]
