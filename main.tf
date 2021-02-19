@@ -98,7 +98,7 @@ resource "aws_lb_target_group_attachment" "pypi_tg_attachment" {
 resource "aws_lb_listener" "pypi_listener" {
   count             = local.count_alb
   load_balancer_arn = var.alb_arn
-  port              = 443
+  port              = var.pypi_port
   protocol          = var.certificate_arn == "" ? "HTTP" : "HTTPS"
   certificate_arn   = var.certificate_arn == "" ? null : var.certificate_arn
 
