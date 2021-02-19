@@ -62,6 +62,7 @@ EC2 instance is provisioned. More detailed examples are contained in the folder 
 | ebs\_size | The size in GB of the EBS disk to use for PyPi package storage | `number` | `2` | no |
 | has\_alb | A flag to determine whether the PyPi server should be put behind an application load balancer | `bool` | `false` | no |
 | instance\_type | The type of the EC2 instance to install the PyPi server on | `string` | `"t3a.nano"` | no |
+| keypair | Key pair for accessing the EC2 through SSH | `string` | `null` | no |
 | pypi\_password | The password corresponding to the pypi\_username variable. Keep default only for testing. | `string` | `"password"` | no |
 | pypi\_port | The port to which the PyPi server is listening | `number` | `8080` | no |
 | pypi\_username | The username for uploading and download packages from the PyPi server. Keep default only for testing. | `string` | `"admin"` | no |

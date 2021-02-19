@@ -56,6 +56,12 @@ variable "security_groups" {
   default     = []
 }
 
+variable "keypair" {
+  type        = string
+  description = "Key pair for accessing the EC2 through SSH"
+  default     = null
+}
+
 variable "pypi_port" {
   type        = number
   description = "The port to which the PyPi server is listening"
