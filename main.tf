@@ -55,7 +55,7 @@ resource "aws_instance" "pypi" {
   # key_name      = "test-keypair"
 
   subnet_id              = var.vpc_subnet
-  vpc_security_group_ids = [aws_security_group.ec2_instance_sg.id]
+  vpc_security_group_ids = concat([aws_security_group.ec2_instance_sg.id], var.security_groups)
 
   tags = {
     Name      = "pypi-ec2-instance"

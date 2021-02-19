@@ -65,6 +65,7 @@ EC2 instance is provisioned. More detailed examples are contained in the folder 
 | pypi\_password | The password corresponding to the pypi\_username variable. Keep default only for testing. | `string` | `"password"` | no |
 | pypi\_port | The port to which the PyPi server is listening | `number` | `8080` | no |
 | pypi\_username | The username for uploading and download packages from the PyPi server. Keep default only for testing. | `string` | `"admin"` | no |
+| security\_groups | Additional security groups to associate to the EC2 instance | `list(any)` | `[]` | no |
 | vpc\_id | The ID of the VPC where the PyPi server should run | `string` | n/a | yes |
 | vpc\_subnet | The VPC subnet where the PyPi server instance should run | `string` | n/a | yes |
 

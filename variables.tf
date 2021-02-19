@@ -50,6 +50,12 @@ variable "ebs_size" {
   default     = 2
 }
 
+variable "security_groups" {
+  type        = list(any)
+  description = "Additional security groups to associate to the EC2 instance"
+  default     = []
+}
+
 variable "pypi_port" {
   type        = number
   description = "The port to which the PyPi server is listening"
