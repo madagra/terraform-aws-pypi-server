@@ -3,31 +3,33 @@ repo_update: true
 repo_upgrade: all
 
 write_files:
-  - path: /opt/run_pypi_server.sh
-    content: |
-        #!/usr/bin/env bash
+ - path: /etc/supervisord.conf
+   content: |
+           [unix_http_server]
+           file=/tmp/supervisor.sock
+           
+           [supervisord]
+           logfile=/tmp/supervisord.log
+           logfile_maxbytes=50MB
+           logfile_backups=10
+           loglevel=info
+           pidfile=/tmp/supervisord.pid
+           nodaemon=false
+           silent=false
+           minfds=1024
+           minprocs=200
+           
+           [rpcinterface:supervisor]
+           supervisor.rpcinterface_factory = supervisor.rpcinterface:make_main_rpcinterface
+           
+           [supervisorctl]
+           serverurl=unix:///tmp/supervisor.sock
+           
+           [program:pypi_server]
+           command=sudo python3 -m pypiserver -v -p 8080 -P /opt/pypi_server/htpasswd -a download,update,list /opt/pypi_server/packages
+           directory=/opt/pypi_server
+           autorestart=true
 
-        sudo yum update -y
-        sudo yum install -y python3
-        sudo python3 -m pip install passlib
-        sudo python3 -m pip install pypiserver
-
-        sudo python3 -m pypiserver -v -p 8080 -P /opt/pypi_server/htpasswd -a download,update,list /opt/pypi_server/packages
-  - path: /etc/systemd/system/pypi_server.service
-    content: |
-        [Unit]
-        Description=Private Pypi server
-        After=network.target
-
-        [Service]
-        Type=simple
-        ExecStart=/opt/run_pypi_server.sh
-        KillMode=process
-        Restart=on-failure
-        RestartSec=42s
-
-        [Install]
-        WantedBy=default.target
 runcmd:
   - yum update -y
   - yum install -y httpd-tools
@@ -37,6 +39,8 @@ runcmd:
   - mount '${mount_point}' /opt/pypi_server/
   - mkdir /opt/pypi_server/packages
   - htpasswd -b -c /opt/pypi_server/htpasswd '${pypi_username}' '${pypi_password}'
-  - systemctl enable pypi_server.service
-  - systemctl start pypi_server.service
+  - python3 -m pip install supervisor
+  - python3 -m pip install passlib
+  - python3 -m pip install pypiserver
+  - $(which supervisord)
   - sleep 1
