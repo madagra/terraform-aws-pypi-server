@@ -7,7 +7,7 @@ write_files:
    content: |
            [unix_http_server]
            file=/tmp/supervisor.sock
-           
+
            [supervisord]
            logfile=/tmp/supervisord.log
            logfile_maxbytes=50MB
@@ -18,13 +18,13 @@ write_files:
            silent=false
            minfds=1024
            minprocs=200
-           
+
            [rpcinterface:supervisor]
            supervisor.rpcinterface_factory = supervisor.rpcinterface:make_main_rpcinterface
-           
+
            [supervisorctl]
            serverurl=unix:///tmp/supervisor.sock
-           
+
            [program:pypi_server]
            command=sudo python3 -m pypiserver -v -p 8080 -P /opt/pypi_server/htpasswd -a download,update,list /opt/pypi_server/packages
            directory=/opt/pypi_server
@@ -32,15 +32,14 @@ write_files:
 
 runcmd:
   - yum update -y
-  - yum install -y httpd-tools
+  - yum install -y python3 httpd-tools
   - mkfs -t xfs '${mount_point}' >& /dev/null
   - mkdir /opt/pypi_server/
   - chmod u+x /opt/run_pypi_server.sh
   - mount '${mount_point}' /opt/pypi_server/
   - mkdir /opt/pypi_server/packages
   - htpasswd -b -c /opt/pypi_server/htpasswd '${pypi_username}' '${pypi_password}'
-  - python3 -m pip install supervisor
-  - python3 -m pip install passlib
-  - python3 -m pip install pypiserver
+  - python3 -m pip install supervisor passlib pypiserver
   - $(which supervisord)
   - sleep 1
+  - $(which supervisorctl) status
