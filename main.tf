@@ -13,6 +13,7 @@ data "template_file" "cloud-init" {
   vars = {
     pypi_username = var.pypi_username
     pypi_password = var.pypi_password
+    pypi_port     = var.pypi_port
     mount_point   = local.mount_point
   }
 }

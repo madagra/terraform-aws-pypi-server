@@ -26,7 +26,7 @@ write_files:
            serverurl=unix:///tmp/supervisor.sock
 
            [program:pypi_server]
-           command=sudo python3 -m pypiserver -v -p 8080 -P /opt/pypi_server/htpasswd -a download,update,list /opt/pypi_server/packages
+           command=sudo python3 -m pypiserver -v -p '${pypi_port}' -P /opt/pypi_server/htpasswd -a download,update,list /opt/pypi_server/packages
            directory=/opt/pypi_server
            autorestart=true
 
